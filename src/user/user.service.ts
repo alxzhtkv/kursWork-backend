@@ -42,7 +42,7 @@ class UserService {
         await tokenService.saveToken(userDto.userId, tokens.refreshToken);
         await employeeService.saveEmployee(userDto.userId, firstName, lastName, position);
 
-        return { ...tokens, user: userDto};
+        return { ...tokens, user: userDto };
 
     }
 
@@ -65,35 +65,62 @@ class UserService {
 
     }
 
-    async login(email: string, password:string){
+    async login(email: string, password: string) {
         try {
             const user = await User.findOne({ where: { email } });
 
             if (!user) {
                 return { refreshToken: '', accessToken: '', user: [], error: 'Have not users with this email', };
-             
+
             } else if (!bcrypt.compareSync(password, user.password)) {
                 return { refreshToken: '', accessToken: '', user: [], error: 'Invalid credentials', };
-             
+
             } else {
-                if(user.isActivated===false){
-                    user.isActivated=true
+                if (user.isActivated === false) {
+                    user.isActivated = true
                     user.save();
                     // await User.update({ isActivated: true }, { where: { userId: user.userId } });
-                } 
+                }
                 const userDto = new UserDto(user);
                 const tokens = tokenService.generateToken({ ...userDto });
                 await tokenService.saveToken(userDto.userId, tokens.refreshToken);
-                return  { ...tokens, user: userDto};       
+                return { ...tokens, user: userDto };
                 // res.status(200).json({ message: 'Login successful' });
             }
         } catch (error) {
             console.error(error);
-             return { refreshToken: '', accessToken: '', user: [], error: 'Internal server error', };
-             
+            return { refreshToken: '', accessToken: '', user: [], error: 'Internal server error', };
+
         }
     }
 
+    async logout(refreshToken: string) {
+        const token = await tokenService.removeToken(refreshToken);
+        return token
+    }
+
+    async refresh(refreshToken: string) {
+        if (!refreshToken) {
+            return { error: 'invalid token' }
+        }
+        const userData = tokenService.validateRefreshToken(refreshToken);
+        const tokenFromDb = await tokenService.findToken(refreshToken);
+        if (!userData || !tokenFromDb) {
+            return { error: 'unathohorizated user'};
+        }
+
+        if (typeof userData === 'object' && 'userId' in userData) {
+            const user = await User.findByPk(userData.userId);
+            if (user) {
+                const userDto = new UserDto(user);
+                const tokens = tokenService.generateToken({ ...userDto });
+                await tokenService.saveToken(userDto.userId, tokens.refreshToken);
+                return { ...tokens, user: userDto };
+            }
+        }
+        return {}
+
+    }
 
 
 

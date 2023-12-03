@@ -34,6 +34,43 @@ class TokenService {
         return token
     }
 
+    async removeToken(refreshToken:string){
+        const tokenData =  await Token.destroy({ where: { refreshToken } });
+        return tokenData
+
+    }
+    async findToken(refreshToken:string){
+        const tokenData =  await Token.findOne({ where: { refreshToken } });
+        return tokenData
+
+    }
+
+    validateAccessToken(token:string){
+        try{
+            if (process.env.JWT_ACCESS_SECRET){
+                const userData = jwt.verify(token, process.env.JWT_ACCESS_SECRET)
+                return userData
+            }
+          
+        }catch(e){
+            return null;
+        }
+    }
+
+    validateRefreshToken(token:string){
+        try{
+            if (process.env.JWT_REFRESH_SECRET){
+                const userData = jwt.verify(token, process.env.JWT_REFRESH_SECRET)
+                return userData
+            }
+          
+        }catch(e){
+            return null;
+        }
+    }
+
+
+
 }
 
 export default TokenService

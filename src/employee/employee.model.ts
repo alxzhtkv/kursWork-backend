@@ -44,7 +44,7 @@ Employee.init(
         position: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
+            unique: false,
         },
     },
     {
