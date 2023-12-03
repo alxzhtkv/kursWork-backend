@@ -8,7 +8,7 @@ dotenv.config()
 interface TokenPayload {
     userId: number;
     email: string;
-    isActivated: boolean;
+    role: string;
   }
 class TokenService {
 

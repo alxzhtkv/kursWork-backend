@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { User, UserAttributes } from "./user.model";
 import UserService from "./user.service";
+import { validationResult } from "express-validator/src/validation-result";
 
 
 const userService = new UserService();
@@ -13,37 +14,64 @@ class UserController {
 
     async registration(req: Request, res: Response) {
         try {
-            const role = 'employee'
+            // const errors = validationResult(req)
+            // if(!errors){
+            //     return
+            // }
+            const role = 'employee';
             const { email, password, lastName, firstName, position } = req.body;
-            const userData = await userService.registration(email,password,role,lastName,firstName,position)
-
-            res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
-            console.log(userData)
-            return res.json(userData);
-
+            const userData = await userService.registration(email, password, role, lastName, firstName, position);
+            if (userData.error) {
+                return res.status(409).json({ message: userData.error });
+            } else {
+                res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
+                console.log(userData);
+                return res.json(userData);
+            }
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
     }
 
-  
 
     async login(req: Request, res: Response) {
+
         try {
             const { email, password } = req.body;
-            const user = await User.findOne({ where: { email } });
-
-            if (!user) {
-                res.status(401).json({ message: 'Invalid credentials' });
-            } else if (!bcrypt.compareSync(password, user.password)) {
-                res.status(401).json({ message: 'Invalid credentials' });
-            } else {
-                res.status(200).json({ message: 'Login successful' });
+            const userData = await userService.login(email, password)
+            if (userData.error){
+                return res.status(409).json({ message: userData.error });
             }
+            else{
+                res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
+                console.log(userData);
+                return res.json(userData);
+            }
+           
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Internal server error' });
         }
+        // try {
+        //     const { email, password } = req.body;
+        //     const user = await User.findOne({ where: { email } });
+
+        //     if (!user) {
+        //         res.status(401).json({ message: 'Invalid credentials' });
+        //     } else if (!bcrypt.compareSync(password, user.password)) {
+        //         res.status(401).json({ message: 'Invalid credentials' });
+        //     } else {
+        //         if (user.isActivated === false) {
+        //             user.isActivated = true
+        //             user.save();
+        //             // await User.update({ isActivated: true }, { where: { userId: user.userId } });
+        //         }
+        //         res.status(200).json({ message: 'Login successful' });
+        //     }
+        // } catch (error) {
+        //     console.error(error);
+        //     res.status(500).json({ message: 'Internal server error' });
+        // }
     }
 
 

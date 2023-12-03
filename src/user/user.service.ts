@@ -26,28 +26,23 @@ const transporter = nodemailer.createTransport({
 class UserService {
 
 
-    async registration(email: string, password: string,  role: string, lastName : string,firstName: string,position: string) {
-
+    async registration(email: string, password: string, role: string, lastName: string, firstName: string, position: string) {
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
-            throw new Error('User already exists')
+            return { refreshToken: '', accessToken: '', user: [], error: 'User already exists', };
         }
 
-
         const hashedPassword = bcrypt.hashSync(password, 10);
-        // const activationLink = uuidv4();
         const user = await User.create({ email, password: hashedPassword, role } as UserAttributes);
-       
-        this.sendActivationMail(email,password )
 
-        // this.sendActivationMail(email, `${process.env.API_URL}/activate/${activationLink}`)
+        // this.sendActivationMail(email, password);
 
-        const userDto = new UserDto(user); //id, email/isActivated
-        ///&&&           
+        const userDto = new UserDto(user);
         const tokens = tokenService.generateToken({ ...userDto });
-        await tokenService.saveToken(userDto.userId, tokens.refreshToken)
-        await employeeService.saveEmployee(userDto.userId, firstName, lastName,position)
-        return { ...tokens, user: userDto }
+        await tokenService.saveToken(userDto.userId, tokens.refreshToken);
+        await employeeService.saveEmployee(userDto.userId, firstName, lastName, position);
+
+        return { ...tokens, user: userDto};
 
     }
 
@@ -68,6 +63,35 @@ class UserService {
             `,
         })
 
+    }
+
+    async login(email: string, password:string){
+        try {
+            const user = await User.findOne({ where: { email } });
+
+            if (!user) {
+                return { refreshToken: '', accessToken: '', user: [], error: 'Have not users with this email', };
+             
+            } else if (!bcrypt.compareSync(password, user.password)) {
+                return { refreshToken: '', accessToken: '', user: [], error: 'Invalid credentials', };
+             
+            } else {
+                if(user.isActivated===false){
+                    user.isActivated=true
+                    user.save();
+                    // await User.update({ isActivated: true }, { where: { userId: user.userId } });
+                } 
+                const userDto = new UserDto(user);
+                const tokens = tokenService.generateToken({ ...userDto });
+                await tokenService.saveToken(userDto.userId, tokens.refreshToken);
+                return  { ...tokens, user: userDto};       
+                // res.status(200).json({ message: 'Login successful' });
+            }
+        } catch (error) {
+            console.error(error);
+             return { refreshToken: '', accessToken: '', user: [], error: 'Internal server error', };
+             
+        }
     }
 
 
