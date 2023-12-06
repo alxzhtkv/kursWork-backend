@@ -1,8 +1,8 @@
-import express from 'express';
+import express, { Request } from 'express';
 import { body } from 'express-validator';
 import UserController from './user.controller';
+import { validateAccessToken } from '../middlewares/auth-middleware';
 
-const auth= require('../middlewares/auth-middleware')
 const userRouter = express.Router();
 const userController = new UserController();
 
@@ -15,6 +15,8 @@ userRouter.post('/logout', userController.logout);
 userRouter.get('/activate/:link',userController.activate);
 // userRouter.get('/refresh', userController.refresh);
 userRouter.get('/users', userController.getUsers)
+
+userRouter.get('/test', validateAccessToken, (req: any) => console.log(req['user']))
 
 
 export default userRouter
