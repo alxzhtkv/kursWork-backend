@@ -43,7 +43,8 @@ class UserController {
                 return res.status(409).json({ message: userData.error });
             }
             else {
-                res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
+             
+                // res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
                 console.log(userData);
                 return res.json(userData);
             }
@@ -67,9 +68,9 @@ class UserController {
     async logout(req: Request, res: Response) {
         try {
             const { refreshToken } = req.cookies;
-            const token = await userService.logout(refreshToken)
+            // const token = await userService.logout(refreshToken)
             res.clearCookie('refreshToken');
-            return res.json(token);
+            return res.json({message: 'successful'});
         } catch (error) {
 
         }
@@ -82,21 +83,21 @@ class UserController {
         }
     }
 
-    async refresh(req: Request, res: Response) {
-         try {
-            const { refreshToken } = req.cookies;
-            const userData = await userService.refresh(refreshToken)
-            if (userData.error) {
-                return res.status(409).json({ message: userData.error });
-            }else{
-                res.cookie('refreshToken', userData.refreshToken);
-                return res.json(userData);
-            }
+    // async refresh(req: Request, res: Response) {
+    //      try {
+    //         const { refreshToken } = req.cookies;
+    //         const userData = await userService.refresh(refreshToken)
+    //         if (userData.error) {
+    //             return res.status(409).json({ message: userData.error });
+    //         }else{
+    //             res.cookie('refreshToken', userData.refreshToken);
+    //             return res.json(userData);
+    //         }
           
-        } catch (error) {
+    //     } catch (error) {
 
-        }
-    }
+    //     }
+    // }
 
 
 

@@ -44,6 +44,7 @@ User.init(
             type: DataTypes.STRING,
             allowNull: true,
         },
+
     },
     {
         sequelize,
@@ -55,9 +56,9 @@ User.hasOne(Token, {
     foreignKey: 'userId',
   });
   
-  Token.belongsTo(User, {
-    foreignKey: 'userId',
-  });
+  // Token.belongsTo(User, {
+  //   foreignKey: 'userId',
+  // });
 
   Employee.belongsTo(User, {
     foreignKey: 'userId',
@@ -71,13 +72,13 @@ User.hasOne(Token, {
   User.sync()
   .then(() => {
     console.log('Таблица пользователей (users) создана или уже существует');
-    Token.sync()
-      .then(() => {
-        console.log('Таблица токенов (tokens) создана или уже существует');
-      })
-      .catch((error) => {
-        console.error('Ошибка при создании таблицы токенов:', error);
-      });
+    // Token.sync()
+    //   .then(() => {
+    //     console.log('Таблица токенов (tokens) создана или уже существует');
+    //   })
+    //   .catch((error) => {
+    //     console.error('Ошибка при создании таблицы токенов:', error);
+    //   });
       Employee.sync()
       .then(() => {
         console.log('Таблица сотрудников (Employee) создана или уже существует');
