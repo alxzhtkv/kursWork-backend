@@ -24,7 +24,7 @@ class UserController {
             if (userData.error) {
                 return res.status(409).json({ message: userData.error });
             } else {
-                res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
+                // res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
                 console.log(userData);
                 return res.json(userData);
             }
@@ -39,11 +39,11 @@ class UserController {
         try {
             const { email, password } = req.body;
             const userData = await userService.login(email, password)
-            if (userData.error) {
+            if (userData && userData.error) {
                 return res.status(409).json({ message: userData.error });
             }
             else {
-             
+
                 // res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
                 console.log(userData);
                 return res.json(userData);
@@ -53,7 +53,7 @@ class UserController {
             console.error(error);
             res.status(500).json({ message: 'Internal server error' });
         }
-      
+
     }
 
 
@@ -70,7 +70,7 @@ class UserController {
             const { refreshToken } = req.cookies;
             // const token = await userService.logout(refreshToken)
             res.clearCookie('refreshToken');
-            return res.json({message: 'successful'});
+            return res.json({ message: 'successful' });
         } catch (error) {
 
         }
@@ -78,6 +78,17 @@ class UserController {
     async activate(req: Request, res: Response) {
         try {
             res.json(['123', '456'])
+        } catch (error) {
+
+        }
+    }
+
+    async getUserData(req: Request, res: Response) {
+        try {
+            const { accessToken } = req.body;
+            const userData = await userService.getUserInfo(accessToken);
+            console.log('userData',userData)
+            return res.json(userData);
         } catch (error) {
 
         }
@@ -93,7 +104,7 @@ class UserController {
     //             res.cookie('refreshToken', userData.refreshToken);
     //             return res.json(userData);
     //         }
-          
+
     //     } catch (error) {
 
     //     }

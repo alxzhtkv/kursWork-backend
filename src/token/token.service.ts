@@ -9,6 +9,9 @@ interface TokenPayload {
     userId: number;
     email: string;
     role: string;
+    firstName: string,
+    lastName: string;
+
   }
 class TokenService {
 

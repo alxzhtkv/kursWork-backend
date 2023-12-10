@@ -6,6 +6,7 @@ import TokenService from "../token/token.service";
 import UserDto from "./user.dto";
 import * as tls from 'tls';
 import EmployeeService from "../employee/employee.service";
+import { Employee } from "../employee/employee.model";
 
 
 
@@ -29,7 +30,7 @@ class UserService {
     async registration(email: string, password: string, role: string, lastName: string, firstName: string, position: string) {
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
-            return { refreshToken: '', accessToken: '', user: [], error: 'User already exists', };
+            return { accessToken: '', user: [], error: 'User already exists', };
         }
 
         const hashedPassword = bcrypt.hashSync(password, 10);
@@ -37,7 +38,7 @@ class UserService {
 
         // this.sendActivationMail(email, password);
 
-        const userDto = new UserDto(user);
+        const userDto = new UserDto({...user,firstName,lastName});
         const tokens = tokenService.generateToken({ ...userDto });
         // await tokenService.saveToken(userDto.userId, tokens.refreshToken);
         await employeeService.saveEmployee(userDto.userId, firstName, lastName, position);
@@ -70,10 +71,10 @@ class UserService {
             const user = await User.findOne({ where: { email } });
 
             if (!user) {
-                return {accessToken: '', user: [], error: 'Have not users with this email', };
+                return { accessToken: '', error: 'Have not users with this email', };
 
             } else if (!bcrypt.compareSync(password, user.password)) {
-                return {accessToken: '', user: [], error: 'Invalid credentials', };
+                return { accessToken: '', error: 'Invalid credentials', };
 
             } else {
                 if (user.isActivated === false) {
@@ -81,18 +82,35 @@ class UserService {
                     user.save();
                     // await User.update({ isActivated: true }, { where: { userId: user.userId } });
                 }
-                const userDto = new UserDto(user);
-                // const tokens = tokenService.generateToken({ ...userDto });
-                // await tokenService.saveToken(userDto.userId, tokens.refreshToken);
-                return {user: userDto };
-                // res.status(200).json({ message: 'Login successful' });
+                const employeData = await employeeService.getEmployee(user.userId);
+                if(employeData){
+                    const userDto = new UserDto({ email:user.email,
+                        userId: user.userId,role: user.role, firstName: employeData?.firstName, lastName: employeData?.lastName });
+                    console.log('userDto',userDto)
+                    const tokens = tokenService.generateToken({ ...userDto });
+                    return { accessToken: tokens.accessToken };
+                }
+               
+
             }
         } catch (error) {
             console.error(error);
-            return {user: [], error: 'Internal server error', };
+            return {accessToken: '', error: 'Internal server error', };
 
         }
     }
+
+
+
+    async getUserInfo(accessToken: string) {
+        const user = tokenService.validateAccessToken(accessToken)
+        return user
+
+
+    }
+
+
+
 
     async logout(refreshToken: string) {
         // const token = await tokenService.removeToken(refreshToken);
@@ -121,9 +139,6 @@ class UserService {
         // return {}
 
     }
-
-
-
 }
 
 export default UserService

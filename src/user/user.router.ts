@@ -15,6 +15,7 @@ userRouter.post('/logout', userController.logout);
 userRouter.get('/activate/:link',userController.activate);
 // userRouter.get('/refresh', userController.refresh);
 userRouter.get('/users', userController.getUsers)
+userRouter.post('/getUserData', userController.getUserData)
 
 userRouter.get('/test', validateAccessToken, (req: any) => console.log(req['user']))
 
